@@ -1,8 +1,9 @@
 // Change this address to match your deployed contract!
-const contract_address = "0xa5b70b3f9e02b2d0b85E10042a76b1A7F397Cc6b";
+// https://ropsten.etherscan.io/address/0xed5d7513a4fed3de2d9e36afa9637a37a7bd9e35 - Ropsten Ethereum Testnet Contract Address
+const contract_address = "0xeD5D7513a4FED3dE2d9E36Afa9637a37a7BD9E35";
 
 const dApp = {
-  ethEnabled: function() {
+  ethEnabled: function () {
     // If the browser has MetaMask installed
     if (window.ethereum) {
       window.web3 = new Web3(window.ethereum);
@@ -11,8 +12,8 @@ const dApp = {
     }
     return false;
   },
-  updateUI: function() {
-    const renderItem = (copyright_id, reference_uri, icon_class, {name, description, image}) => `
+  updateUI: function () {
+    const renderItem = (copyright_id, reference_uri, icon_class, { name, description, image }) => `
         <li>
           <div class="collapsible-header"><i class="${icon_class}"></i>Copyright Number ${copyright_id}: ${name}</div>
           <div class="collapsible-body">
@@ -28,26 +29,26 @@ const dApp = {
     const fetchMetadata = (reference_uri) => fetch(`https://gateway.pinata.cloud/ipfs/${reference_uri.replace("ipfs://", "")}`, { mode: "cors" }).then((resp) => resp.json());
 
     // fetch the Copyright Events from the contract and append them to the UI list
-    this.contract.events.Copyright({fromBlock: 0}, (err, event) => {
+    this.contract.events.Copyright({ fromBlock: 0 }, (err, event) => {
       const { copyright_id, reference_uri } = event.returnValues;
 
       fetchMetadata(reference_uri)
-      .then((json) => {
-        $("#dapp-copyrights").append(renderItem(copyright_id, reference_uri, "far fa-copyright", json));
-      });
+        .then((json) => {
+          $("#dapp-copyrights").append(renderItem(copyright_id, reference_uri, "far fa-copyright", json));
+        });
     });
 
     // fetch the OpenSource Events from the contract and append them to the UI list
-    this.contract.events.OpenSource({fromBlock: 0}, (err, event) => {
+    this.contract.events.OpenSource({ fromBlock: 0 }, (err, event) => {
       const { copyright_id, reference_uri } = event.returnValues;
 
       fetchMetadata(reference_uri)
-      .then((json) => {
-        $("#dapp-opensource").append(renderItem(copyright_id, reference_uri, "fab fa-osi", json));
-      });
+        .then((json) => {
+          $("#dapp-opensource").append(renderItem(copyright_id, reference_uri, "fab fa-osi", json));
+        });
     });
   },
-  copyrightWork: async function() {
+  copyrightWork: async function () {
     const name = $("#dapp-copyright-name").val();
     const description = $("#dapp-copyright-description").val();
     const image = document.querySelector('input[type="file"]');
@@ -62,7 +63,7 @@ const dApp = {
 
     const image_data = new FormData();
     image_data.append("file", image.files[0]);
-    image_data.append("pinataOptions", JSON.stringify({cidVersion: 1}));
+    image_data.append("pinataOptions", JSON.stringify({ cidVersion: 1 }));
 
     try {
       M.toast({ html: "Uploading Image to IPFS via Pinata..." });
@@ -84,7 +85,7 @@ const dApp = {
 
       const reference_json = JSON.stringify({
         pinataContent: { name, description, image: image_uri },
-        pinataOptions: {cidVersion: 1}
+        pinataOptions: { cidVersion: 1 }
       });
 
       const json_upload_response = await fetch("https://api.pinata.cloud/pinning/pinJSONToIPFS", {
@@ -105,24 +106,24 @@ const dApp = {
       M.toast({ html: "Sending to blockchain..." });
 
       if ($("#dapp-opensource-toggle").prop("checked")) {
-        this.contract.methods.openSourceWork(reference_uri).send({from: this.accounts[0]})
-        .on("receipt", (receipt) => {
-          M.toast({ html: "Transaction Mined! Refreshing UI..." });
-          location.reload();
-        });
+        this.contract.methods.openSourceWork(reference_uri).send({ from: this.accounts[0] })
+          .on("receipt", (receipt) => {
+            M.toast({ html: "Transaction Mined! Refreshing UI..." });
+            location.reload();
+          });
       } else {
-        this.contract.methods.copyrightWork(reference_uri).send({from: this.accounts[0]})
-        .on("receipt", (receipt) => {
-          M.toast({ html: "Transaction Mined! Refreshing UI..." });
-          location.reload();
-        });
+        this.contract.methods.copyrightWork(reference_uri).send({ from: this.accounts[0] })
+          .on("receipt", (receipt) => {
+            M.toast({ html: "Transaction Mined! Refreshing UI..." });
+            location.reload();
+          });
       }
 
     } catch (e) {
       alert("ERROR:", JSON.stringify(e));
     }
   },
-  main: async function() {
+  main: async function () {
     // Initialize web3
     if (!this.ethEnabled()) {
       alert("Please install MetaMask to use this dApp!");
